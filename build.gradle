@@ -161,6 +161,7 @@ configure(allprojects) { project ->
 	}
 
 	test {
+		ignoreFailures = true
 		systemProperty("java.awt.headless", "true")
 		systemProperty("testGroups", project.properties.get("testGroups"))
 		scanForTestClasses = false
@@ -213,6 +214,21 @@ configure(allprojects) { project ->
 		"http://fasterxml.github.io/jackson-dataformat-xml/javadoc/2.8/",
 		"http://hc.apache.org/httpcomponents-client-ga/httpclient/apidocs/"
 	] as String[]
+
+apply plugin: 'jacoco'
+
+jacoco {
+    toolVersion = "0.7.9"
+    reportsDir = file("$buildDir/customJacocoReportDir")
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled false
+        csv.enabled false
+        html.destination file("${buildDir}/jacocoHtml")
+    }
+}
 }
 
 configure(subprojects - project(":spring-build-src")) { subproject ->
