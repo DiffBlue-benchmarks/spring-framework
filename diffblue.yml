@@ -1,0 +1,476 @@
+buildCmd: ./gradlew assemble
+testCmd: true
+skipVerification: true
+cbmcArguments:
+  # Do not generate coverage comments on generated tests.
+  java-generate-no-comments: true
+  # Constrain the size of arrays created in the analyzed code.
+  java-max-vla-length: 100000
+phases:
+  -
+    # Phase 0 PRETTY, SIMPLE and SMART - pretty tests, do not test private methods directly, Smart-Harness
+    timeout: 180
+    cbmcArguments:
+      # Use simple models first containers (ArrayList, HashMap, HashSet,...) will have a maximum size of one.
+      classpath: '/tools/cbmc/models-simple-overlay.jar:/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: 1500
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 10
+      # Bound the length of input strings.
+      max-nondet-string-length: 10
+      # Add constraint that strings are printable
+      string-printable: true
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: false
+      # Set an upper bound on loop unwinding.
+      unwind: 1
+      # Do not test any methods that have the specified access level.
+      do-not-test-methods-with-access: [private]
+      # Instrument the entry point function only.
+      cover-function-only: false
+      # Instrument the file as opposed to the function only
+      cover-only: file
+      # Set string input value
+      string-input-value: ["foo", "Bar", "BAZ", "1234", "1a 2b 3c", "A1B2C3", "a,b,c", "1", "2", "3", "a/b/c", "a'b'c", ",", "/", "'"]
+      # Instantiate classes using the simplest constructor strategy
+      smart-harness: simplest-constructor-and-nondet
+  -
+    # Phase 1 PRETTY AND COMPLEX - standard models only, pretty tests, do not test private methods directly, input factory
+    timeout: 180
+    cbmcArguments:
+      # Use the standard models library
+      classpath: '/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: false
+      # never initialize reference-typed parameter to the entry point with null
+      java-assume-inputs-non-null: true
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 10
+      # Bound the length of input strings.
+      max-nondet-string-length: 10
+      # Add constraint that strings are printable
+      string-printable: true
+      # Set string input value
+      string-input-value: ["foo", "Bar", "BAZ", "1234", "1a 2b 3c", "A1B2C3", "a,b,c", "1", "2", "3", "a/b/c", "a'b'c", ",", "/", "'"]
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: false
+      # Set an upper bound on loop unwinding.
+      unwind: 2
+      # Do not test any methods that have the specified access level.
+      do-not-test-methods-with-access: [private]
+      # Instrument the entry point function only.
+      cover-function-only: false
+      # instrument the file as opposed to the function only
+      cover-only: file
+      # Limit input factory recursive depth (default 0 = no recursion allowed)
+      java-test-input-factory-bmc-recursion-limit: 4
+  -
+    # Phase 2 FIFO Strategy - pretty tests, do not test private methods directly, fifo
+    timeout: 100
+    cbmcArguments:
+      # Use the standard models library
+      classpath: '/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: false
+      # never initialize reference-typed parameter to the entry point with null
+      java-assume-inputs-non-null: true
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 30
+      # Add constraint that strings are printable
+      max-nondet-string-length: 100
+      # Explores the program tree breadth-first.
+      paths: fifo
+      # Set string input value
+      string-input-value: ["foo", "Bar", "BAZ", "1234", "1a 2b 3c", "A1B2C3", "a,b,c", "1", "2", "3", "a/b/c", "a'b'c", ",", "/", "'"]
+      # Add constraint that strings are printable
+      string-printable: true
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: false
+      # Set an upper bound on loop unwinding.
+      unwind: false
+      # Do not test any methods that have the specified access level.
+      do-not-test-methods-with-access: [private]
+      # Instrument the entry point function only.
+      cover-function-only: false
+      # instrument the file as opposed to the function only
+      cover-only: file
+  -
+    # Phase 3 Exceptions - do not test private methods directly
+    timeout: 180
+    cbmcArguments:
+      # Use simple models containers first (ArrayList, HashMap, HashSet,...) will have a maximum size of one.
+      classpath: '/tools/cbmc/models-simple-overlay.jar:/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: false
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 30
+      # Bound the length of input strings.
+      max-nondet-string-length: 30
+      # Add constraint that strings are printable
+      string-printable: false
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: true
+      # Set an upper bound on loop unwinding.
+      unwind: 3
+      # Do not test any methods that have the specified access level.
+      do-not-test-methods-with-access: [private]
+      # Instrument the entry point function only.
+      cover-function-only: false
+      # instrument the file as opposed to the function only
+      cover-only: file
+  -
+    # Phase 4 Direct testing - test private methods directly, increased reflection
+    timeout: 180
+    cbmcArguments:
+      # Use simple models containers first (ArrayList, HashMap, HashSet,...) will have a maximum size of one.
+      classpath: '/tools/cbmc/models-simple-overlay.jar:/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: 1500
+      # never initialize reference-typed parameter to the entry point with null
+      java-assume-inputs-non-null: true
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 10
+      # Bound the length of input strings.
+      max-nondet-string-length: 10
+      # Add constraint that strings are printable
+      string-printable: true
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: false
+      # Set an upper bound on loop unwinding.
+      unwind: 1
+      # Set string input value
+      string-input-value: ["foo", "Bar", "BAZ", "1234", "1a 2b 3c", "A1B2C3", "a,b,c", "1", "2", "3", "a/b/c", "a'b'c", ",", "/", "'"]
+      # If the logs contain output of the following then proceed to phase X
+    nextPhase:
+      # If the function is not analysable then do not pass onto the next phase
+      not_analyzed: null
+  -
+    # PHASE 5 Mocking - aggressive mocking, do not test private methods directly
+    timeout: 180
+    cbmcArguments:
+      # Use simple models containers first (ArrayList, HashMap, HashSet,...) will have a maximum size of one.
+      classpath: '/tools/cbmc/models-simple-overlay.jar:/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: 3000
+      # never initialize reference-typed parameter to the entry point with null
+      java-assume-inputs-non-null: true
+      # Only load the class (and related inner/outer classes) containing the method under test,
+      load-containing-class-only: true
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 30
+      # Bound the length of input strings.
+      max-nondet-string-length: 100
+      # Add constraint that strings are printable
+      string-printable: false
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: true
+      # Set an upper bound on loop unwinding.
+      unwind: 3
+      # Do not test any methods that have the specified access level.
+      do-not-test-methods-with-access: [private]
+      # Instrument the entry point function only.
+      cover-function-only: false
+      # instrument the file as opposed to the function only
+      cover-only: file
+units:
+ - target:
+   - dir: spring-beans/build/classes/groovy/main
+     file: org/springframework/beans/PropertyAccessorUtils.class
+     sourceDir: spring-beans/src/main/java
+     sourceFile: org/springframework/beans/PropertyAccessorUtils.java
+ - target:
+   - dir: spring-jdbc/build/classes/java/main
+     file: org/springframework/jdbc/support/JdbcUtils.class
+     sourceDir: spring-jdbc/src/main/java
+     sourceFile: org/springframework/jdbc/support/JdbcUtils.java
+   - dir: spring-jdbc/build/classes/java/main
+     file: org/springframework/jdbc/datasource/SmartDataSource.class
+     sourceDir: spring-jdbc/src/main/java
+     sourceFile: org/springframework/jdbc/datasource/SmartDataSource.java
+   - dir: spring-jdbc/build/classes/java/main
+     file: org/springframework/jdbc/support/DatabaseMetaDataCallback.class
+     sourceDir: spring-jdbc/src/main/java
+     sourceFile: org/springframework/jdbc/support/DatabaseMetaDataCallback.java
+   - dir: spring-jcl/build/classes/java/main
+     file: org/apache/commons/logging/Log.class
+     sourceDir: spring-jcl/src/main/java
+     sourceFile: org/apache/commons/logging/Log.java
+   - dir: spring-jcl/build/classes/java/main
+     file: org/apache/commons/logging/LogAdapter$Slf4jLog.class
+     sourceDir: spring-jcl/src/main/java
+     sourceFile: org/apache/commons/logging/LogAdapter.java
+   - dir: spring-tx/build/classes/java/main
+     file: org/springframework/transaction/support/ResourceHolder.class
+     sourceDir: spring-tx/src/main/java
+     sourceFile: org/springframework/transaction/support/ResourceHolder.java
+   - dir: spring-jdbc/build/classes/java/main
+     file: org/springframework/jdbc/datasource/SimpleConnectionHandle.class
+     sourceDir: spring-jdbc/src/main/java
+     sourceFile: org/springframework/jdbc/datasource/SimpleConnectionHandle.java
+   - dir: spring-jcl/build/classes/java/main
+     file: org/apache/commons/logging/LogAdapter.class
+     sourceDir: spring-jcl/src/main/java
+     sourceFile: org/apache/commons/logging/LogAdapter.java
+   - dir: spring-core/build/classes/java/main
+     file: org/springframework/util/Assert.class
+     sourceDir: spring-core/src/main/java
+     sourceFile: org/springframework/util/Assert.java
+   - dir: spring-jdbc/build/classes/java/main
+     file: org/springframework/jdbc/datasource/ConnectionHolder.class
+     sourceDir: spring-jdbc/src/main/java
+     sourceFile: org/springframework/jdbc/datasource/ConnectionHolder.java
+   - dir: spring-core/build/classes/java/main
+     file: org/springframework/core/NestedCheckedException.class
+     sourceDir: spring-core/src/main/java
+     sourceFile: org/springframework/core/NestedCheckedException.java
+   - dir: spring-jcl/build/classes/java/main
+     file: org/apache/commons/logging/LogAdapter$Slf4jLocationAwareLog.class
+     sourceDir: spring-jcl/src/main/java
+     sourceFile: org/apache/commons/logging/LogAdapter.java
+   - dir: spring-core/build/classes/java/main
+     file: org/springframework/util/StringUtils.class
+     sourceDir: spring-core/src/main/java
+     sourceFile: org/springframework/util/StringUtils.java
+   - dir: spring-tx/build/classes/java/main
+     file: org/springframework/transaction/support/ResourceHolderSupport.class
+     sourceDir: spring-tx/src/main/java
+     sourceFile: org/springframework/transaction/support/ResourceHolderSupport.java
+   - dir: spring-tx/build/classes/java/main
+     file: org/springframework/transaction/support/TransactionSynchronizationAdapter.class
+     sourceDir: spring-tx/src/main/java
+     sourceFile: org/springframework/transaction/support/TransactionSynchronizationAdapter.java
+   - dir: spring-core/build/classes/java/main
+     file: org/springframework/core/NestedRuntimeException.class
+     sourceDir: spring-core/src/main/java
+     sourceFile: org/springframework/core/NestedRuntimeException.java
+   - dir: spring-tx/build/classes/java/main
+     file: org/springframework/transaction/support/TransactionSynchronizationManager.class
+     sourceDir: spring-tx/src/main/java
+     sourceFile: org/springframework/transaction/support/TransactionSynchronizationManager.java
+   - dir: spring-jcl/build/classes/java/main
+     file: org/apache/commons/logging/LogAdapter$Log4jLog.class
+     sourceDir: spring-jcl/src/main/java
+     sourceFile: org/apache/commons/logging/LogAdapter.java
+   - dir: spring-core/build/classes/java/main
+     file: org/springframework/util/NumberUtils.class
+     sourceDir: spring-core/src/main/java
+     sourceFile: org/springframework/util/NumberUtils.java
+   - dir: spring-tx/build/classes/java/main
+     file: org/springframework/transaction/support/TransactionSynchronizationUtils.class
+     sourceDir: spring-tx/src/main/java
+     sourceFile: org/springframework/transaction/support/TransactionSynchronizationUtils.java
+   - dir: spring-tx/build/classes/java/main
+     file: org/springframework/dao/DataAccessException.class
+     sourceDir: spring-tx/src/main/java
+     sourceFile: org/springframework/dao/DataAccessException.java
+   - dir: spring-jcl/build/classes/java/main
+     file: org/apache/commons/logging/LogAdapter$JavaUtilLog.class
+     sourceDir: spring-jcl/src/main/java
+     sourceFile: org/apache/commons/logging/LogAdapter.java
+   - dir: spring-tx/build/classes/java/main
+     file: org/springframework/dao/DataAccessResourceFailureException.class
+     sourceDir: spring-tx/src/main/java
+     sourceFile: org/springframework/dao/DataAccessResourceFailureException.java
+   - dir: spring-jdbc/build/classes/java/main
+     file: org/springframework/jdbc/datasource/ConnectionHandle.class
+     sourceDir: spring-jdbc/src/main/java
+     sourceFile: org/springframework/jdbc/datasource/ConnectionHandle.java
+   - dir: spring-jcl/build/classes/java/main
+     file: org/apache/commons/logging/LogFactory.class
+     sourceDir: spring-jcl/src/main/java
+     sourceFile: org/apache/commons/logging/LogFactory.java
+   - dir: spring-jdbc/build/classes/java/main
+     file: org/springframework/jdbc/support/MetaDataAccessException.class
+     sourceDir: spring-jdbc/src/main/java
+     sourceFile: org/springframework/jdbc/support/MetaDataAccessException.java
+   - dir: spring-jdbc/build/classes/java/main
+     file: org/springframework/jdbc/datasource/DelegatingDataSource.class
+     sourceDir: spring-jdbc/src/main/java
+     sourceFile: org/springframework/jdbc/datasource/DelegatingDataSource.java
+   - dir: spring-jcl/build/classes/java/main
+     file: org/apache/commons/logging/LogAdapter$JavaUtilAdapter.class
+     sourceDir: spring-jcl/src/main/java
+     sourceFile: org/apache/commons/logging/LogAdapter.java
+   - dir: spring-tx/build/classes/java/main
+     file: org/springframework/dao/NonTransientDataAccessResourceException.class
+     sourceDir: spring-tx/src/main/java
+     sourceFile: org/springframework/dao/NonTransientDataAccessResourceException.java
+   - dir: spring-jcl/build/classes/java/main
+     file: org/apache/commons/logging/LogAdapter$Log4jAdapter.class
+     sourceDir: spring-jcl/src/main/java
+     sourceFile: org/apache/commons/logging/LogAdapter.java
+   - dir: spring-aop/build/classes/java/main
+     file: org/springframework/aop/scope/ScopedObject.class
+     sourceDir: spring-aop/src/main/java
+     sourceFile: org/springframework/aop/scope/ScopedObject.java
+   - dir: spring-core/build/classes/java/main
+     file: org/springframework/core/InfrastructureProxy.class
+     sourceDir: spring-core/src/main/java
+     sourceFile: org/springframework/core/InfrastructureProxy.java
+   - dir: spring-jdbc/build/classes/java/main
+     file: org/springframework/jdbc/CannotGetJdbcConnectionException.class
+     sourceDir: spring-jdbc/src/main/java
+     sourceFile: org/springframework/jdbc/CannotGetJdbcConnectionException.java
+   - dir: spring-jcl/build/classes/java/main
+     file: org/apache/commons/logging/LogAdapter$Slf4jAdapter.class
+     sourceDir: spring-jcl/src/main/java
+     sourceFile: org/apache/commons/logging/LogAdapter.java
+   - dir: spring-tx/build/classes/java/main
+     file: org/springframework/transaction/support/TransactionSynchronizationUtils$ScopedProxyUnwrapper.class
+     sourceDir: spring-tx/src/main/java
+     sourceFile: org/springframework/transaction/support/TransactionSynchronizationUtils.java
+   - dir: spring-jdbc/build/classes/java/main
+     file: org/springframework/jdbc/datasource/ConnectionProxy.class
+     sourceDir: spring-jdbc/src/main/java
+     sourceFile: org/springframework/jdbc/datasource/ConnectionProxy.java
+   - dir: spring-jdbc/build/classes/java/main
+     file: org/springframework/jdbc/datasource/DataSourceUtils.class
+     sourceDir: spring-jdbc/src/main/java
+     sourceFile: org/springframework/jdbc/datasource/DataSourceUtils.java
+   - dir: spring-jdbc/build/classes/java/main
+     file: org/springframework/jdbc/datasource/DataSourceUtils$ConnectionSynchronization.class
+     sourceDir: spring-jdbc/src/main/java
+     sourceFile: org/springframework/jdbc/datasource/DataSourceUtils.java
+   - dir: spring-tx/build/classes/java/main
+     file: org/springframework/dao/NonTransientDataAccessException.class
+     sourceDir: spring-tx/src/main/java
+     sourceFile: org/springframework/dao/NonTransientDataAccessException.java
+ - target:
+   - dir: spring-core/build/classes/java/main
+     file: org/springframework/util/StringUtils.class
+     sourceDir: spring-core/src/main/java
+     sourceFile: org/springframework/util/StringUtils.java
+   - dir: spring-core/build/classes/java/main
+     file: org/springframework/util/ObjectUtils.class
+     sourceDir: spring-core/src/main/java
+     sourceFile: org/springframework/util/ObjectUtils.java
+   - dir: spring-core/build/classes/java/main
+     file: org/springframework/util/Assert.class
+     sourceDir: spring-core/src/main/java
+     sourceFile: org/springframework/util/Assert.java
+   - dir: spring-core/build/classes/java/main
+     file: org/springframework/util/CollectionUtils.class
+     sourceDir: spring-core/src/main/java
+     sourceFile: org/springframework/util/CollectionUtils.java
+ - target:
+   - dir: spring-expression/build/classes/java/main
+     file: org/springframework/expression/common/TemplateAwareExpressionParser$Bracket.class
+     sourceDir: spring-expression/src/main/java
+     sourceFile: org/springframework/expression/common/TemplateAwareExpressionParser.java
+ - target:
+   - dir: spring-aop/build/classes/java/main
+     file: org/springframework/aop/framework/AopProxyUtils.class
+     sourceDir: spring-aop/src/main/java
+     sourceFile: org/springframework/aop/framework/AopProxyUtils.java
+   - dir: spring-core/build/classes/java/main
+     file: org/springframework/util/ObjectUtils.class
+     sourceDir: spring-core/src/main/java
+     sourceFile: org/springframework/util/ObjectUtils.java
+   - dir: spring-core/build/classes/java/main
+     file: org/springframework/util/Assert.class
+     sourceDir: spring-core/src/main/java
+     sourceFile: org/springframework/util/Assert.java
+   - dir: spring-aop/build/classes/java/main
+     file: org/springframework/aop/framework/AdvisedSupport.class
+     sourceDir: spring-aop/src/main/java
+     sourceFile: org/springframework/aop/framework/AdvisedSupport.java
+   - dir: spring-aop/build/classes/java/main
+     file: org/springframework/aop/framework/ProxyConfig.class
+     sourceDir: spring-aop/src/main/java
+     sourceFile: org/springframework/aop/framework/ProxyConfig.java
+   - dir: spring-aop/build/classes/java/main
+     file: org/springframework/aop/target/SingletonTargetSource.class
+     sourceDir: spring-aop/src/main/java
+     sourceFile: org/springframework/aop/target/SingletonTargetSource.java
+   - dir: spring-aop/build/classes/java/main
+     file: org/springframework/aop/framework/Advised.class
+     sourceDir: spring-aop/src/main/java
+     sourceFile: org/springframework/aop/framework/Advised.java
+   - dir: spring-aop/build/classes/java/main
+     file: org/springframework/aop/TargetClassAware.class
+     sourceDir: spring-aop/src/main/java
+     sourceFile: org/springframework/aop/TargetClassAware.java
+   - dir: spring-aop/build/classes/java/main
+     file: org/springframework/aop/support/AopUtils.class
+     sourceDir: spring-aop/src/main/java
+     sourceFile: org/springframework/aop/support/AopUtils.java
+   - dir: spring-core/build/classes/java/main
+     file: org/springframework/util/ClassUtils.class
+     sourceDir: spring-core/src/main/java
+     sourceFile: org/springframework/util/ClassUtils.java
+   - dir: spring-aop/build/classes/java/main
+     file: org/springframework/aop/TargetSource.class
+     sourceDir: spring-aop/src/main/java
+     sourceFile: org/springframework/aop/TargetSource.java
+ - target:
+   - dir: spring-expression/build/classes/java/main
+     file: org/springframework/expression/spel/CodeFlow.class
+     sourceDir: spring-expression/src/main/java
+     sourceFile: org/springframework/expression/spel/CodeFlow.java
+   - dir: spring-core/build/classes/java/main
+     file: org/springframework/asm/Edge.class
+     sourceDir: spring-core/src/main/java
+     sourceFile: org/springframework/asm/Edge.java
+   - dir: spring-core/build/classes/java/main
+     file: org/springframework/asm/ByteVector.class
+     sourceDir: spring-core/src/main/java
+     sourceFile: org/springframework/asm/ByteVector.java
+   - dir: spring-core/build/classes/java/main
+     file: org/springframework/asm/SymbolTable$Entry.class
+     sourceDir: spring-core/src/main/java
+     sourceFile: org/springframework/asm/SymbolTable.java
+   - dir: spring-core/build/classes/java/main
+     file: org/springframework/asm/MethodVisitor.class
+     sourceDir: spring-core/src/main/java
+     sourceFile: org/springframework/asm/MethodVisitor.java
+   - dir: spring-core/build/classes/java/main
+     file: org/springframework/asm/ClassWriter.class
+     sourceDir: spring-core/src/main/java
+     sourceFile: org/springframework/asm/ClassWriter.java
+   - dir: spring-core/build/classes/java/main
+     file: org/springframework/asm/MethodWriter.class
+     sourceDir: spring-core/src/main/java
+     sourceFile: org/springframework/asm/MethodWriter.java
+   - dir: spring-core/build/classes/java/main
+     file: org/springframework/asm/Label.class
+     sourceDir: spring-core/src/main/java
+     sourceFile: org/springframework/asm/Label.java
+   - dir: spring-core/build/classes/java/main
+     file: org/springframework/util/CollectionUtils.class
+     sourceDir: spring-core/src/main/java
+     sourceFile: org/springframework/util/CollectionUtils.java
+   - dir: spring-expression/build/classes/java/main
+     file: org/springframework/expression/spel/CodeFlow$ClinitAdder.class
+     sourceDir: spring-expression/src/main/java
+     sourceFile: org/springframework/expression/spel/CodeFlow.java
+   - dir: spring-core/build/classes/java/main
+     file: org/springframework/asm/Symbol.class
+     sourceDir: spring-core/src/main/java
+     sourceFile: org/springframework/asm/Symbol.java
+   - dir: spring-core/build/classes/java/main
+     file: org/springframework/asm/SymbolTable.class
+     sourceDir: spring-core/src/main/java
+     sourceFile: org/springframework/asm/SymbolTable.java
+   - dir: spring-core/build/classes/java/main
+     file: org/springframework/asm/Frame.class
+     sourceDir: spring-core/src/main/java
+     sourceFile: org/springframework/asm/Frame.java
+   - dir: spring-core/build/classes/java/main
+     file: org/springframework/asm/Type.class
+     sourceDir: spring-core/src/main/java
+     sourceFile: org/springframework/asm/Type.java
+   - dir: spring-expression/build/classes/java/main
+     file: org/springframework/expression/spel/CodeFlow$FieldAdder.class
+     sourceDir: spring-expression/src/main/java
+     sourceFile: org/springframework/expression/spel/CodeFlow.java
+ - target:
+   - dir: spring-core/build/classes/java/main
+     file: org/springframework/util/PatternMatchUtils.class
+     sourceDir: spring-core/src/main/java
+     sourceFile: org/springframework/util/PatternMatchUtils.java
+ - target:
+   - dir: spring-core/build/classes/java/main
+     file: org/springframework/asm/Type.class
+     sourceDir: spring-core/src/main/java
+     sourceFile: org/springframework/asm/Type.java
